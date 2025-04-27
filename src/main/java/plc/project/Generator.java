@@ -70,7 +70,6 @@ public final class Generator implements Ast.Visitor<Void> {
             print(" = ");
             print(ast.getValue().get());
         }
-
         print(";");
         return null;
     }
@@ -89,13 +88,12 @@ public final class Generator implements Ast.Visitor<Void> {
             }
             print(getName(ast.getParameterTypeNames().get(typenameSize - 1)), " ", ast.getParameters().get(paramSize - 1));
         }
-        print(") ", "{");
+        print(") {");
         if (!ast.getStatements().isEmpty()) {
             indent++;
             for (Ast.Statement stmt : ast.getStatements()) {
                 newline(indent);
                 print(stmt);
-//                visit(stmt);
             }
             newline(--indent);
         }
@@ -122,16 +120,11 @@ public final class Generator implements Ast.Visitor<Void> {
             }
         }
 
-        // print variable name
         print(" ", ast.getName());
-
-        // check for value
         if (ast.getValue().isPresent()) {
             print(" = ");
             print(ast.getValue().get());
         }
-
-        // end statement
         print(";");
         return null;
     }
@@ -181,16 +174,16 @@ public final class Generator implements Ast.Visitor<Void> {
             print(";");
         }
         print(" ");
-        print(ast.getCondition());
+        print(ast.getCondition(), ";");
         if (ast.getIncrement() != null) {
-            print(ast.getIncrement());
-        } else {
-            print(";");
+            // Increment w/ no ;
+            print(' ', ((Ast.Statement.Assignment)ast.getIncrement()).getReceiver());
+            print(" = ");
+            print(((Ast.Statement.Assignment)ast.getIncrement()).getValue());
         }
 
         print(" ) {");
         indent++;
-
         if(!ast.getStatements().isEmpty()) {
             for (Ast.Statement stmt : ast.getStatements()) {
                 newline(indent);
@@ -210,7 +203,6 @@ public final class Generator implements Ast.Visitor<Void> {
         print(") {");
         indent++;
 
-        // visit all statements
         if(!ast.getStatements().isEmpty()) {
             for (Ast.Statement stmt : ast.getStatements()) {
                 newline(indent);
@@ -234,24 +226,24 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Literal ast) {
         if (ast.getType() == Environment.Type.BOOLEAN) {
             // Bool
-            Boolean loc = (Boolean) ast.getLiteral();
-            print(loc);
+            Boolean literal = (Boolean) ast.getLiteral();
+            print(literal);
         } else if (ast.getType() == Environment.Type.INTEGER) {
             // Int
-            BigInteger loc = (BigInteger) ast.getLiteral();
-            print(loc);
+            BigInteger literal = (BigInteger) ast.getLiteral();
+            print(literal);
         } else if (ast.getType() == Environment.Type.STRING) {
             // String
-            String loc = (String) ast.getLiteral();
-            print("\"", loc, "\"");
+            String literal = (String) ast.getLiteral();
+            print("\"", literal, "\"");
         } else if (ast.getType() == Environment.Type.CHARACTER) {
             // Char
-            char loc = (char) ast.getLiteral();
-            print("'", loc, "'");
+            char literal = (char) ast.getLiteral();
+            print("'", literal, "'");
         } else if (ast.getType() == Environment.Type.DECIMAL) {
             // Float
-            BigDecimal loc = (BigDecimal) ast.getLiteral();
-            print(loc.toString());
+            BigDecimal literal = (BigDecimal) ast.getLiteral();
+            print(literal.toString());
         } else {
             throw new RuntimeException("Type Error");
         }
@@ -319,12 +311,12 @@ public final class Generator implements Ast.Visitor<Void> {
 
         print(func.getJvmName(), "(");
         List<Ast.Expression> args = ast.getArguments();
-        if (args.size() > 0) {
+        if (!args.isEmpty()) {
             for (int i = 0; i < args.size() - 1; i++) {
                 visit(args.get(i));
                 print(", ");
             }
-            print(args.get(args.size() - 1));
+            print(args.getLast());
         }
         print(")");
         return null;
